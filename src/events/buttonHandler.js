@@ -416,6 +416,7 @@ async function handleModal(i) {
     const language = i.fields.getTextInputValue("sub_lang").toLowerCase().trim();
     const code = i.fields.getTextInputValue("sub_code");
 
+    await ensureUser(i.user.id);
     const question = await prisma.question.findUnique({ where: { id: qId } });
     if (!question) return i.reply({ content: "Question not found!", ephemeral: true });
 
