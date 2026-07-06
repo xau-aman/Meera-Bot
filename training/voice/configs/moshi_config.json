@@ -1,0 +1,23 @@
+{
+  "model": {
+    "name": "moshika-mlx-bf16",
+    "repo_id": "kyutai/moshika-mlx-bf16",
+    "sample_rate": 24000,
+    "frame_size": 1920
+  },
+  "voice": {
+    "description": "Meera — warm, friendly Indian English female voice",
+    "temperature": 0.7,
+    "top_k": 50,
+    "repetition_penalty": 1.1
+  },
+  "session": {
+    "silence_timeout_ms": 30000,
+    "max_response_tokens": 512,
+    "wake_words": ["hey meera", "hi meera", "meera"]
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8765
+  }
+}
