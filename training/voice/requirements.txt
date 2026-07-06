@@ -1,0 +1,31 @@
+# Meera Voice Training Requirements
+# TTS: VITS model training
+# STT: Whisper for speech recognition
+
+# Core
+torch>=2.1.0
+torchaudio>=2.1.0
+numpy>=1.24.0
+
+# VITS dependencies
+scipy>=1.11.0
+librosa>=0.10.0
+soundfile>=0.12.0
+unidecode>=1.3.0
+phonemizer>=3.2.0
+matplotlib>=3.7.0
+
+# Audio processing
+pydub>=0.25.0
+webrtcvad>=2.0.10
+resampy>=0.4.0
+
+# Whisper STT (local)
+openai-whisper>=20231117
+
+# Dataset download
+gdown>=4.7.0
+tqdm>=4.65.0
+
+# Monitoring
+tensorboard>=2.14.0

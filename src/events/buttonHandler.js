@@ -11,6 +11,7 @@ const {
 const prisma = require("../lib/db");
 const { ensureUser, awardXP } = require("../lib/xp");
 const { chat } = require("../lib/ai");
+const { joinVC, leaveVC, isInVC } = require("../voice/voiceHandler");
 
 module.exports = {
   name: "interactionCreate",
@@ -72,6 +73,7 @@ async function handleButton(i) {
     const row2 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_notes").setLabel("📝 My Notes").setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Meera").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("menu_voice_join").setLabel("🎙️ Join VC").setStyle(ButtonStyle.Secondary),
     );
     return i.update({ embeds: [embed], components: [row1, row2] });
   }
@@ -272,6 +274,20 @@ async function handleButton(i) {
     const qId = parseInt(id.split("_")[1]);
     const q = await prisma.question.findUnique({ where: { id: qId } });
     return i.reply({ content: `💡 **Hint:** ||${q?.hints || "No hint available"}||`, ephemeral: true });
+  }
+
+  // ── Voice Join ──
+  if (id === "menu_voice_join") {
+    const vc = i.member.voice.channel;
+    if (!vc) {
+      return i.reply({ content: "Pehle kisi VC mein ja, phir click kar! 🎙️", ephemeral: true });
+    }
+    if (isInVC(i.guild.id)) {
+      leaveVC(i.guild.id);
+      return i.reply({ content: "👋 Left the VC. See you later!", ephemeral: true });
+    }
+    joinVC(vc);
+    return i.reply({ content: `🎙️ Joined **${vc.name}**! Say **"Hey Meera"** to start talking.`, ephemeral: false });
   }
 
   // ── Submit Solution Modal ──

@@ -25,6 +25,7 @@ module.exports = {
     const row2 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_notes").setLabel("📝 My Notes").setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Meera").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("menu_voice_join").setLabel("🎙️ Join VC").setStyle(ButtonStyle.Secondary),
     );
 
     await message.reply({ embeds: [embed], components: [row1, row2] });
