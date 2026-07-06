@@ -7,8 +7,10 @@ training/scripts/__pycache__/
 bot.log
 
 # Voice
-training/voice/model/moshika-mlx-bf16/
+training/voice/model/moshika-mlx-q4/
 training/voice/model/voice_profile/
 training/voice/data/voice_reference/*.wav
 training/voice/scripts/__pycache__/
 temp/
+venv/
+training/voice/venv/

@@ -1,7 +1,7 @@
 {
   "model": {
-    "name": "moshika-mlx-bf16",
-    "repo_id": "kyutai/moshika-mlx-bf16",
+    "name": "moshika-mlx-q4",
+    "repo_id": "kyutai/moshika-mlx-q4",
     "sample_rate": 24000,
     "frame_size": 1920
   },

@@ -160,7 +160,7 @@ class VoiceSession {
   async sendToMoshi(pcmBuffer) {
     /**
      * Send audio to Moshi server.
-     * Resample from 48kHz to 24kHz (Moshi's native rate).
+     * Resample from 48kHz int16 to 24kHz float32 (Moshi's native format).
      */
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       try {
@@ -170,32 +170,34 @@ class VoiceSession {
       }
     }
 
-    // Resample 48kHz → 24kHz (simple decimation by 2)
+    // Convert int16 to float32 and resample 48kHz → 24kHz
     const samples16 = new Int16Array(pcmBuffer.buffer, pcmBuffer.byteOffset, pcmBuffer.length / 2);
-    const resampled = new Int16Array(Math.floor(samples16.length / 2));
+    const resampled = new Float32Array(Math.floor(samples16.length / 2));
     for (let i = 0; i < resampled.length; i++) {
-      resampled[i] = samples16[i * 2];
+      resampled[i] = samples16[i * 2] / 32768.0;
     }
 
-    // Send to Moshi
+    // Send float32 PCM to Moshi
     this.ws.send(Buffer.from(resampled.buffer));
   }
 
   playAudioChunk(audioData) {
     /**
      * Play Moshi's response audio in the VC.
-     * Audio comes as 24kHz int16 PCM — upsample to 48kHz for Discord.
+     * Audio comes as 24kHz float32 PCM — convert to 48kHz int16 for Discord.
      */
     this.isSpeaking = true;
 
-    // Upsample 24kHz → 48kHz (simple interpolation)
-    const samples = new Int16Array(audioData.buffer, audioData.byteOffset, audioData.length / 2);
+    // Convert float32 to int16 and upsample 24kHz → 48kHz
+    const samples = new Float32Array(audioData.buffer, audioData.byteOffset, audioData.length / 4);
     const upsampled = new Int16Array(samples.length * 2);
     for (let i = 0; i < samples.length; i++) {
-      upsampled[i * 2] = samples[i];
+      const val = Math.max(-1, Math.min(1, samples[i]));
+      const sample16 = Math.round(val * 32767);
+      upsampled[i * 2] = sample16;
       upsampled[i * 2 + 1] = i < samples.length - 1
-        ? Math.round((samples[i] + samples[i + 1]) / 2)
-        : samples[i];
+        ? Math.round((samples[i] + samples[i + 1]) / 2 * 32767)
+        : sample16;
     }
 
     // Create readable stream from buffer

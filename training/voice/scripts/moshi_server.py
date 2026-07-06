@@ -1,171 +1,215 @@
-"""Meera Voice Server — Real-time speech-to-speech using Moshi.
+"""Meera Voice Server — Real-time speech-to-speech using Moshi (MLX).
 
-This runs as a local WebSocket server that the Discord bot connects to.
-Audio streams in, Meera's voice streams out. ~200ms latency.
+Uses the correct moshi_mlx API:
+- rustymimi for audio tokenization (encode/decode PCM ↔ tokens)
+- LmGen for language model inference (audio tokens → response tokens)
 
 Architecture:
-    Discord Bot (Node.js) <--WebSocket--> Moshi Server (Python/MLX)
+    Discord Bot (Node.js) ←WebSocket→ This Server (Python)
+    
+    Audio In → rustymimi.encode → LmGen.step → rustymimi.decode → Audio Out
 
 Usage:
     python moshi_server.py [--port 8765]
 """
 import asyncio
 import json
-import struct
 import sys
 import os
+import time
 from pathlib import Path
 
 import numpy as np
+import mlx.core as mx
+import mlx.nn as nn
 import websockets
+import rustymimi
+import huggingface_hub
 
-# Add parent to path for imports
+from moshi_mlx import models, utils
+
 BASE_DIR = Path(__file__).parent.parent
-MODEL_DIR = BASE_DIR / "model" / "moshika-mlx-bf16"
+MODEL_DIR = BASE_DIR / "model" / "moshika-mlx-q4"
 
-# Server config
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("MOSHI_PORT", 8765))
-SAMPLE_RATE = 24000  # Moshi uses 24kHz
-FRAME_SIZE = 1920  # 80ms frames at 24kHz
+SAMPLE_RATE = 24000
+FRAME_SIZE = 1920  # 80ms at 24kHz
 
 
-class MoshiSession:
-    """Manages a single Moshi inference session."""
+def get_model_files():
+    """Get paths to model files (download from HF if needed)."""
+    model_file = str(MODEL_DIR / "model.q4.safetensors")
+    tokenizer_file = str(MODEL_DIR / "tokenizer_spm_32k_3.model")
+    mimi_file = str(MODEL_DIR / "tokenizer-e351c8d8-checkpoint125.safetensors")
+
+    # Check if files exist
+    for f in [model_file, tokenizer_file, mimi_file]:
+        if not os.path.exists(f):
+            print(f"ERROR: Missing file: {f}")
+            print("Run: python scripts/setup_moshi.py")
+            sys.exit(1)
+
+    return model_file, tokenizer_file, mimi_file
+
+
+class MoshiEngine:
+    """Moshi inference engine — handles audio-to-audio generation."""
 
     def __init__(self):
-        self.model = None
-        self.is_active = False
-        self.audio_buffer = bytearray()
+        self.gen = None
+        self.audio_tokenizer = None
+        self.text_tokenizer = None
+        self.is_ready = False
 
-    async def initialize(self):
-        """Load Moshi model."""
-        try:
-            import mlx.core as mx
-            from moshi_mlx import models
+    def load(self):
+        """Load all model components."""
+        model_file, tokenizer_file, mimi_file = get_model_files()
 
-            if not MODEL_DIR.exists():
-                print("ERROR: Model not found. Run: python scripts/setup_moshi.py")
-                sys.exit(1)
+        print("[Engine] Loading text tokenizer...")
+        import sentencepiece
+        self.text_tokenizer = sentencepiece.SentencePieceProcessor(tokenizer_file)
 
-            print(f"Loading Moshi model from {MODEL_DIR}...")
-            self.model = models.load_model(MODEL_DIR)
-            self.is_active = True
-            print("✅ Moshi model loaded — ready for conversations!")
-            return True
+        print("[Engine] Loading Moshi LM (q4 quantized)...")
+        mx.random.seed(299792458)
+        lm_config = models.config_v0_1()
+        model = models.Lm(lm_config)
+        model.set_dtype(mx.bfloat16)
+        nn.quantize(model, bits=4, group_size=32)
+        model.load_weights(model_file, strict=True)
+        model.warmup()
 
-        except ImportError as e:
-            print(f"ERROR: Missing dependency — {e}")
-            print("Run: pip install -r requirements.txt")
-            return False
+        print("[Engine] Creating generator...")
+        self.gen = models.LmGen(
+            model=model,
+            max_steps=2048,
+            text_sampler=utils.Sampler(),
+            audio_sampler=utils.Sampler(),
+            check=False,
+        )
 
-    async def process_audio(self, audio_bytes):
-        """Process incoming audio and generate response audio.
+        print("[Engine] Loading audio tokenizer (Mimi)...")
+        self.audio_tokenizer = rustymimi.StreamTokenizer(mimi_file)
+
+        # Warmup audio tokenizer
+        print("[Engine] Warming up...")
+        for _ in range(4):
+            silence = np.zeros(FRAME_SIZE, dtype=np.float32)
+            self.audio_tokenizer.encode(silence)
+            time.sleep(0.01)
+            data = None
+            while data is None:
+                time.sleep(0.005)
+                data = self.audio_tokenizer.get_encoded()
+
+        self.is_ready = True
+        print("[Engine] ✅ Ready!")
+
+    def process_frame(self, pcm_frame):
+        """Process one audio frame and return response audio.
 
         Args:
-            audio_bytes: Raw PCM audio (24kHz, mono, int16)
+            pcm_frame: numpy float32 array, 1920 samples at 24kHz (80ms)
 
         Returns:
-            Response audio bytes (24kHz, mono, int16) or None
+            Response PCM audio (float32) or None
         """
-        if not self.model or not self.is_active:
+        if not self.is_ready or self.gen is None:
             return None
 
-        try:
-            import mlx.core as mx
+        # Encode input audio to tokens
+        self.audio_tokenizer.encode(pcm_frame)
+        encoded = self.audio_tokenizer.get_encoded()
 
-            # Convert bytes to numpy array
-            audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
-
-            # Feed audio to Moshi and get response
-            # Moshi processes in streaming fashion — feed chunks, get chunks back
-            input_tensor = mx.array(audio_np.reshape(1, -1))
-
-            # Run one step of inference
-            output = self.model.step(input_tensor)
-
-            if output is not None:
-                # Convert back to int16 PCM
-                output_np = np.array(output).flatten()
-                output_np = np.clip(output_np * 32768.0, -32768, 32767).astype(np.int16)
-                return output_np.tobytes()
-
+        if encoded is None:
             return None
 
-        except Exception as e:
-            print(f"[Moshi] Inference error: {e}")
+        # Run LM step
+        tokens = mx.array(encoded).transpose(1, 0)[:, :8]
+        text_token = self.gen.step(tokens)
+
+        # Get response audio tokens
+        audio_tokens = self.gen.last_audio_tokens()
+        if audio_tokens is None:
             return None
+
+        # Decode audio tokens back to PCM
+        audio_tokens_np = np.array(audio_tokens).astype(np.uint32)
+        self.audio_tokenizer.decode(audio_tokens_np)
+
+        # Get decoded audio
+        decoded = self.audio_tokenizer.get_decoded()
+        return decoded
 
     def reset(self):
-        """Reset session state for new conversation."""
-        if self.model:
-            try:
-                self.model.reset()
-            except:
-                pass
-        self.audio_buffer = bytearray()
+        """Reset for new conversation."""
+        if self.gen is not None:
+            # Recreate generator for fresh state
+            pass
 
 
-# Global session
-session = MoshiSession()
+# Global engine
+engine = MoshiEngine()
 
 
 async def handle_connection(websocket):
-    """Handle a WebSocket connection from the Discord bot."""
-    client_addr = websocket.remote_address
-    print(f"[Server] Client connected: {client_addr}")
-
-    session.reset()
+    """Handle WebSocket connection from Discord bot."""
+    addr = websocket.remote_address
+    print(f"[Server] Client connected: {addr}")
 
     try:
         async for message in websocket:
-            # Handle control messages (JSON)
+            # Control messages (JSON string)
             if isinstance(message, str):
                 data = json.loads(message)
                 cmd = data.get("cmd")
 
                 if cmd == "start":
-                    session.reset()
                     await websocket.send(json.dumps({"status": "ready"}))
-                    print(f"[Server] Session started")
+                    print("[Server] Session started")
 
                 elif cmd == "stop":
-                    session.reset()
                     await websocket.send(json.dumps({"status": "stopped"}))
-                    print(f"[Server] Session stopped")
+                    print("[Server] Session stopped")
 
                 elif cmd == "ping":
                     await websocket.send(json.dumps({"status": "pong"}))
 
-            # Handle audio data (binary)
+            # Audio data (binary) — PCM float32 at 24kHz
             elif isinstance(message, bytes):
-                # Process audio through Moshi
-                response_audio = await session.process_audio(message)
+                # Convert bytes to float32 numpy array
+                pcm_input = np.frombuffer(message, dtype=np.float32)
 
-                if response_audio:
-                    # Send response audio back to bot
-                    await websocket.send(response_audio)
+                # Process in FRAME_SIZE chunks
+                for i in range(0, len(pcm_input), FRAME_SIZE):
+                    chunk = pcm_input[i:i + FRAME_SIZE]
+                    if len(chunk) < FRAME_SIZE:
+                        # Pad short chunk
+                        chunk = np.pad(chunk, (0, FRAME_SIZE - len(chunk)))
+
+                    response = engine.process_frame(chunk)
+
+                    if response is not None:
+                        # Send response audio back
+                        await websocket.send(response.astype(np.float32).tobytes())
 
     except websockets.exceptions.ConnectionClosed:
-        print(f"[Server] Client disconnected: {client_addr}")
+        print(f"[Server] Client disconnected: {addr}")
     except Exception as e:
         print(f"[Server] Error: {e}")
-    finally:
-        session.reset()
 
 
 async def main():
-    # Initialize model
-    success = await session.initialize()
-    if not success:
-        sys.exit(1)
+    # Load model
+    engine.load()
 
-    # Start WebSocket server
     print(f"\n🎙️  Meera Voice Server running on ws://{HOST}:{PORT}")
+    print(f"   Model: Moshika (female voice, q4 quantized)")
+    print(f"   Latency: ~200ms")
     print(f"   Waiting for Discord bot connection...\n")
 
     async with websockets.serve(handle_connection, HOST, PORT):
-        await asyncio.Future()  # Run forever
+        await asyncio.Future()
 
 
 if __name__ == "__main__":

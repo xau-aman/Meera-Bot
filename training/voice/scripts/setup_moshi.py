@@ -30,12 +30,11 @@ def download_model():
         print("This is ~3.5GB, might take a few minutes.\n")
 
         snapshot_download(
-            repo_id="kyutai/moshika-mlx-bf16",
-            local_dir=str(MODEL_DIR / "moshika-mlx-bf16"),
-            local_dir_use_symlinks=False,
+            repo_id="kyutai/moshika-mlx-q4",
+            local_dir=str(MODEL_DIR / "moshika-mlx-q4"),
         )
 
-        print(f"\n✅ Model downloaded to: {MODEL_DIR / 'moshika-mlx-bf16'}")
+        print(f"\n✅ Model downloaded to: {MODEL_DIR / 'moshika-mlx-q4'}")
         print("\nNext steps:")
         print("  1. python moshi_server.py     # Start Moshi server")
         print("  2. npm start                  # Start Discord bot")
@@ -55,7 +54,7 @@ def test_model():
         import mlx.core as mx
         from moshi_mlx import models
 
-        model_path = MODEL_DIR / "moshika-mlx-bf16"
+        model_path = MODEL_DIR / "moshika-mlx-q4"
         if not model_path.exists():
             print("ERROR: Model not found. Run: python setup_moshi.py")
             sys.exit(1)
