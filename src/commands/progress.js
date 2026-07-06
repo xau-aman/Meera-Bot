@@ -30,7 +30,7 @@ module.exports = {
         { name: "Progress to Next Level", value: `${bar} (${xpToNext} XP to go)` }
       )
       .setColor(0x7c3aed)
-      .setFooter({ text: "Aurora — Keep pushing, you're doing great! ✨" });
+      .setFooter({ text: "Meera — Keep pushing, you're doing great! ✨" });
 
     return interaction.reply({ embeds: [embed] });
   },

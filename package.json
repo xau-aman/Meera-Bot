@@ -1,7 +1,7 @@
 {
-  "name": "aurora-bot",
+  "name": "meera-bot",
   "version": "1.0.0",
-  "description": "Aurora — Your personal AI mentor for coding, careers, and interviews",
+  "description": "Meera — Your personal AI mentor for coding, careers, and interviews",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

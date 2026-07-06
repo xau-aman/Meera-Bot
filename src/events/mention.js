@@ -7,13 +7,13 @@ module.exports = {
     if (!message.mentions.has(message.client.user)) return;
 
     const embed = new EmbedBuilder()
-      .setTitle("✨ Hey, I'm Aurora!")
+      .setTitle("✨ Hey, I'm Meera!")
       .setDescription(
         `Hey **${message.author.displayName}**! I'm your personal AI mentor for coding, careers & interviews.\n\nWhat do you wanna do today? Pick something below 👇`
       )
       .setColor(0x7c3aed)
       .setThumbnail(message.client.user.displayAvatarURL())
-      .setFooter({ text: "Aurora — Smart, sharp & always here for you 💜" });
+      .setFooter({ text: "Meera — Smart, sharp & always here for you 💜" });
 
     const row1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_daily").setLabel("📅 Daily Question").setStyle(ButtonStyle.Primary),
@@ -24,7 +24,7 @@ module.exports = {
 
     const row2 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_notes").setLabel("📝 My Notes").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Aurora").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Meera").setStyle(ButtonStyle.Danger),
     );
 
     await message.reply({ embeds: [embed], components: [row1, row2] });

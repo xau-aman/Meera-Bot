@@ -1,8 +1,8 @@
-# Aurora
+# Meera
 
 **Your personal AI mentor for coding, careers, and interviews — inside Discord.**
 
-Aurora is a Discord bot that combines coding practice, knowledge management, AI-powered Q&A, and gamification into one seamless experience. Built for developers who want structured preparation without scattered resources.
+Meera is a Discord bot that combines coding practice, knowledge management, AI-powered Q&A, and gamification into one seamless experience. Built for developers who want structured preparation without scattered resources.
 
 ---
 
@@ -37,7 +37,7 @@ Aurora is a Discord bot that combines coding practice, knowledge management, AI-
 - Linked to your Discord identity
 
 ### AI Assistant
-- Ask Aurora anything about DSA, CS theory, interviews, or career advice
+- Ask Meera anything about DSA, CS theory, interviews, or career advice
 - Powered by Groq (Llama 3.3 70B) with a custom mentor personality
 - Conversational, concise, and practical responses
 
@@ -48,7 +48,7 @@ Aurora is a Discord bot that combines coding practice, knowledge management, AI-
 - Server-wide leaderboard
 
 ### Button-Centric UI
-- Mention Aurora to open the interactive menu
+- Mention Meera to open the interactive menu
 - All features accessible via buttons and modals
 - No need to memorize commands — just click
 
@@ -103,8 +103,8 @@ PostgreSQL (Prisma ORM)        Groq API (AI)
 ### Installation
 
 ```bash
-git clone https://github.com/xau-aman/Aurora-Bot.git
-cd Aurora-Bot
+git clone https://github.com/xau-aman/Meera-Bot.git
+cd Meera-Bot
 npm install
 ```
 
@@ -120,7 +120,7 @@ Fill in your `.env`:
 DISCORD_TOKEN=your_discord_bot_token
 DISCORD_CLIENT_ID=your_application_id
 GROQ_API_KEY=your_groq_api_key
-DATABASE_URL=postgresql://user:password@localhost:5432/aurora
+DATABASE_URL=postgresql://user:password@localhost:5432/meera
 ```
 
 ### Database Setup
@@ -163,7 +163,7 @@ npm run dev      # development (auto-restart on file changes)
 | `/submit <id> <lang> <code>` | Submit a solution and earn XP |
 | `/note add <title> <content> [tags]` | Save a note to your second brain |
 | `/note search <query>` | Search notes by title or tag |
-| `/ask <question>` | Ask Aurora anything |
+| `/ask <question>` | Ask Meera anything |
 | `/progress` | View your XP, level, streak, and stats |
 | `/leaderboard` | View the server's top coders |
 
@@ -171,14 +171,14 @@ npm run dev      # development (auto-restart on file changes)
 
 ## Interactive Menu
 
-Mention Aurora (`@Aurora`) in any channel to open the interactive menu. From there:
+Mention Meera (`@Meera`) in any channel to open the interactive menu. From there:
 
 - **Daily Question** — Get today's problem with hint and submit buttons
 - **Pick a Topic** — Dropdown menu to select a topic, get a random question
 - **My Progress** — View your stats with action buttons
 - **Leaderboard** — See who's on top
 - **My Notes** — Add, search, or browse recent notes via modals
-- **Ask Aurora** — Opens a text modal for AI-powered Q&A
+- **Ask Meera** — Opens a text modal for AI-powered Q&A
 
 Everything is navigable via buttons. No commands needed.
 
@@ -187,7 +187,7 @@ Everything is navigable via buttons. No commands needed.
 ## Project Structure
 
 ```
-Aurora-Bot/
+Meera-Bot/
 ├── prisma/
 │   ├── schema.prisma          # Database models
 │   └── seed.js                # Starter DSA questions (10 problems)
@@ -204,7 +204,7 @@ Aurora-Bot/
 │   │   ├── mention.js         # Mention detection + menu
 │   │   └── ready.js           # Bot startup
 │   ├── lib/
-│   │   ├── ai.js              # Groq client + Aurora personality
+│   │   ├── ai.js              # Groq client + Meera personality
 │   │   ├── db.js              # Prisma client singleton
 │   │   └── xp.js              # XP awards + streak logic
 │   ├── deploy-commands.js     # Register slash commands with Discord
@@ -251,7 +251,7 @@ Auto-deploys on every `git push` to main.
 
 ## Training (Custom Model)
 
-Aurora includes a from-scratch transformer model (38M parameters) for experimentation.
+Meera includes a from-scratch transformer model (38M parameters) for experimentation.
 
 ### Setup
 
@@ -289,7 +289,7 @@ python scripts/inference.py         # Chat with it
 - Interview Preparation (HR, behavioral, technical, system design)
 - Resume and LinkedIn Optimization
 - Cybersecurity Fundamentals (OWASP, common vulnerabilities)
-- Aurora Personality (conversational style)
+- Meera Personality (conversational style)
 
 ---
 

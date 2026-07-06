@@ -1,4 +1,4 @@
-"""Aurora GPT — small transformer model (~50M params, fits 8GB VRAM)."""
+"""Meera GPT — small transformer model (~50M params, fits 8GB VRAM)."""
 import math
 import torch
 import torch.nn as nn
@@ -72,7 +72,7 @@ class TransformerBlock(nn.Module):
         x = x + self.ff(self.norm2(x))
         return x
 
-class AuroraGPT(nn.Module):
+class MeeraGPT(nn.Module):
     def __init__(self, cfg: Config = None):
         super().__init__()
         self.cfg = cfg or Config()
@@ -142,8 +142,8 @@ class AuroraGPT(nn.Module):
 
 if __name__ == "__main__":
     cfg = Config()
-    model = AuroraGPT(cfg)
-    print(f"AuroraGPT — {model.count_params() / 1e6:.1f}M parameters")
+    model = MeeraGPT(cfg)
+    print(f"MeeraGPT — {model.count_params() / 1e6:.1f}M parameters")
     print(f"Config: {cfg.n_layers} layers, {cfg.n_heads} heads, d_model={cfg.d_model}")
 
     # Test forward pass

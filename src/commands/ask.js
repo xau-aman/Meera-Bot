@@ -4,7 +4,7 @@ const { chat } = require("../lib/ai");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("ask")
-    .setDescription("Ask Aurora anything about coding, DSA, or CS concepts")
+    .setDescription("Ask Meera anything about coding, DSA, or CS concepts")
     .addStringOption((o) =>
       o.setName("question").setDescription("Your question").setRequired(true)
     ),
@@ -20,10 +20,10 @@ module.exports = {
       const chunks = answer.match(/[\s\S]{1,4000}/g) || [answer];
 
       const embed = new EmbedBuilder()
-        .setTitle("✨ Aurora says...")
+        .setTitle("✨ Meera says...")
         .setDescription(chunks[0])
         .setColor(0x7c3aed)
-        .setFooter({ text: "Powered by Aurora AI • Ask me anything!" });
+        .setFooter({ text: "Powered by Meera AI • Ask me anything!" });
 
       await interaction.editReply({ embeds: [embed] });
 

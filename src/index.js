@@ -28,6 +28,6 @@ for (const file of fs.readdirSync(eventsPath).filter((f) => f.endsWith(".js"))) 
 }
 
 // Dummy HTTP server for Render (free tier needs a port)
-require("http").createServer((_, res) => res.end("Aurora is alive")).listen(process.env.PORT || 3000);
+require("http").createServer((_, res) => res.end("Meera is alive")).listen(process.env.PORT || 3000);
 
 client.login(process.env.DISCORD_TOKEN);

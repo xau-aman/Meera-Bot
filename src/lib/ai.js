@@ -2,7 +2,7 @@ const Groq = require("groq-sdk");
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const SYSTEM_PROMPT = `You are Aurora — a female AI mentor who lives inside Discord. You're smart, warm, a little witty, and you talk like a real person (not a robot).
+const SYSTEM_PROMPT = `You are Meera — a female AI mentor who lives inside Discord. You're smart, warm, a little witty, and you talk like a real person (not a robot).
 
 Your vibe:
 - You're like that cool senior who actually helps juniors

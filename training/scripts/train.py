@@ -1,11 +1,11 @@
-"""Train AuroraGPT from scratch."""
+"""Train MeeraGPT from scratch."""
 import os
 import time
 import torch
 from torch.utils.data import Dataset, DataLoader
 from tokenizers import Tokenizer
 from tqdm import tqdm
-from model import AuroraGPT, Config
+from model import MeeraGPT, Config
 
 # ─── Hyperparameters ───
 BATCH_SIZE = 8
@@ -19,11 +19,11 @@ MAX_SEQ_LEN = 512
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "..")
 DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
-TOK_PATH = os.path.join(BASE_DIR, "tokenizer", "aurora_tokenizer.json")
+TOK_PATH = os.path.join(BASE_DIR, "tokenizer", "meera_tokenizer.json")
 CKPT_DIR = os.path.join(BASE_DIR, "model")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-class AuroraDataset(Dataset):
+class MeeraDataset(Dataset):
     def __init__(self, filepath, tokenizer, max_len=MAX_SEQ_LEN):
         with open(filepath, "r", encoding="utf-8") as f:
             text = f.read()
@@ -78,15 +78,15 @@ def main():
     cfg.vocab_size = tokenizer.get_vocab_size()
 
     # Datasets
-    train_ds = AuroraDataset(os.path.join(DATA_DIR, "train.txt"), tokenizer)
-    val_ds = AuroraDataset(os.path.join(DATA_DIR, "val.txt"), tokenizer)
+    train_ds = MeeraDataset(os.path.join(DATA_DIR, "train.txt"), tokenizer)
+    val_ds = MeeraDataset(os.path.join(DATA_DIR, "val.txt"), tokenizer)
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=0, pin_memory=True)
     val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE, shuffle=False, num_workers=0, pin_memory=True)
     print(f"Train: {len(train_ds)} samples, Val: {len(val_ds)} samples")
 
     # Model
-    model = AuroraGPT(cfg).to(DEVICE)
-    print(f"AuroraGPT: {model.count_params() / 1e6:.1f}M params on {DEVICE}")
+    model = MeeraGPT(cfg).to(DEVICE)
+    print(f"MeeraGPT: {model.count_params() / 1e6:.1f}M params on {DEVICE}")
 
     # Optimizer
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY, betas=(0.9, 0.95))

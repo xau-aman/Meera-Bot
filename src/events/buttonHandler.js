@@ -56,12 +56,12 @@ async function handleButton(i) {
   // ── Main Menu ──
   if (id === "menu_home") {
     const embed = new EmbedBuilder()
-      .setTitle("✨ Hey, I'm Aurora!")
+      .setTitle("✨ Hey, I'm Meera!")
       .setDescription(
         `Hey **${i.user.displayName}**! I'm your personal AI mentor for coding, careers & interviews.\n\nWhat do you wanna do today? Pick something below 👇`
       )
       .setColor(0x7c3aed)
-      .setFooter({ text: "Aurora — Smart, sharp & always here for you 💜" });
+      .setFooter({ text: "Meera — Smart, sharp & always here for you 💜" });
 
     const row1 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_daily").setLabel("📅 Daily Question").setStyle(ButtonStyle.Primary),
@@ -71,7 +71,7 @@ async function handleButton(i) {
     );
     const row2 = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("menu_notes").setLabel("📝 My Notes").setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Aurora").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Meera").setStyle(ButtonStyle.Danger),
     );
     return i.update({ embeds: [embed], components: [row1, row2] });
   }
@@ -256,9 +256,9 @@ async function handleButton(i) {
     return i.update({ embeds: [embed], components: [row] });
   }
 
-  // ── Ask Aurora Modal ──
+  // ── Ask Meera Modal ──
   if (id === "menu_ask") {
-    const modal = new ModalBuilder().setCustomId("modal_ask").setTitle("🧠 Ask Aurora Anything");
+    const modal = new ModalBuilder().setCustomId("modal_ask").setTitle("🧠 Ask Meera Anything");
     modal.addComponents(
       new ActionRowBuilder().addComponents(
         new TextInputBuilder().setCustomId("ask_question").setLabel("What's on your mind?").setStyle(TextInputStyle.Paragraph).setRequired(true).setPlaceholder("e.g. Explain binary search with an example...")
@@ -378,7 +378,7 @@ async function handleModal(i) {
     return i.reply({ embeds: [embed], components: [row] });
   }
 
-  // ── Ask Aurora ──
+  // ── Ask Meera ──
   if (i.customId === "modal_ask") {
     await i.deferReply();
     try {
@@ -387,10 +387,10 @@ async function handleModal(i) {
       const chunks = answer.match(/[\s\S]{1,4000}/g) || [answer];
 
       const embed = new EmbedBuilder()
-        .setTitle("✨ Aurora says...")
+        .setTitle("✨ Meera says...")
         .setDescription(chunks[0])
         .setColor(0x7c3aed)
-        .setFooter({ text: "Powered by Aurora AI 💜" });
+        .setFooter({ text: "Powered by Meera AI 💜" });
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId("menu_ask").setLabel("🧠 Ask Again").setStyle(ButtonStyle.Primary),
